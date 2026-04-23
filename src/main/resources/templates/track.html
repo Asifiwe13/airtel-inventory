@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airtel Inventory - Track Your Device</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .scan-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="max-w-md w-full">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="bg-white/20 backdrop-blur rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-server text-white text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-white">Airtel Inventory</h1>
+            <p class="text-white/80 mt-2">Track your device status</p>
+        </div>
+        
+        <!-- Search Card -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-4">
+            <div class="text-center mb-6">
+                <i class="fas fa-qrcode text-red-600 text-5xl mb-3"></i>
+                <h2 class="text-xl font-semibold text-gray-800">Scan or Enter Asset Tag</h2>
+                <p class="text-gray-500 text-sm mt-1">Scan the barcode on your device or enter manually</p>
+            </div>
+            
+            <!-- Manual Entry -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-tag mr-1"></i> Asset Tag
+                </label>
+                <div class="flex gap-2">
+                    <input type="text" id="assetTag" placeholder="e.g., APP-S40" 
+                           class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+                    <button onclick="trackDevice()" 
+                            class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Or Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">OR</span>
+                </div>
+            </div>
+            
+            <!-- Camera Scanner (Mobile) -->
+            <div>
+                <button onclick="startMobileScanner()" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition flex items-center justify-center">
+                    <i class="fas fa-camera mr-2"></i> Scan Barcode with Camera
+                </button>
+                <video id="scannerVideo" class="hidden w-full rounded-lg mt-3 border-2 border-red-500" autoplay playsinline></video>
+                <canvas id="scannerCanvas" class="hidden"></canvas>
+                <p id="scanStatus" class="text-xs text-gray-500 mt-2 text-center hidden"></p>
+            </div>
+        </div>
+        
+        <!-- Device Info Card (Hidden until found) -->
+        <div id="deviceInfo" class="bg-white rounded-2xl shadow-xl overflow-hidden hidden">
+            <div class="bg-gradient-to-r from-red-600 to-red-700 p-4 text-white">
+                <div class="flex items-center">
+                    <i class="fas fa-laptop text-2xl mr-3"></i>
+                    <div>
+                        <h3 class="font-semibold" id="deviceAssetTag">-</h3>
+                        <p class="text-sm text-red-100" id="deviceSerial">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-500 text-xs">Device Type</p>
+                        <p class="font-semibold" id="deviceType">-</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-xs">Brand / Model</p>
+                        <p class="font-semibold" id="deviceBrandModel">-</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-xs">Status</p>
+                        <p><span id="deviceStatus" class="px-2 py-1 text-xs rounded-full">-</span></p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-xs">Health Score</p>
+                        <div class="flex items-center mt-1">
+                            <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                <div id="healthBar" class="rounded-full h-2" style="width: 0%"></div>
+                            </div>
+                            <span id="healthScore" class="text-sm font-medium">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p class="text-gray-500 text-xs mb-1">Specifications</p>
+                    <p class="text-sm text-gray-700" id="deviceSpecs">-</p>
+                </div>
+                
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p class="text-gray-500 text-xs mb-1">Assignment Status</p>
+                    <p class="text-sm" id="assignmentInfo">No active assignment</p>
+                </div>
+                
+                <div class="mt-4 text-center text-xs text-gray-400">
+                    <i class="fas fa-shield-alt"></i> Airtel Inventory System
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading -->
+        <div id="loading" class="bg-white rounded-2xl shadow-xl p-6 text-center hidden">
+            <i class="fas fa-spinner fa-spin text-red-600 text-3xl mb-3"></i>
+            <p class="text-gray-600">Searching for device...</p>
+        </div>
+        
+        <!-- Error -->
+        <div id="errorMsg" class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 hidden">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-red-500 mr-3"></i>
+                <p class="text-red-700" id="errorText">Device not found</p>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-6 text-white/60 text-xs">
+            <p>© 2024 Airtel Inventory Management System</p>
+            <p class="mt-1">Scan barcode to track your equipment</p>
+        </div>
+    </div>
+
+    <script>
+        let scannerActive = false;
+        let scannerStream = null;
+        
+        async function trackDevice() {
+            const assetTag = document.getElementById('assetTag').value.trim();
+            if (!assetTag) {
+                showError('Please enter an asset tag');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const response = await fetch(`/api/public/device/${encodeURIComponent(assetTag)}`);
+                if (response.ok) {
+                    const device = await response.json();
+                    showDeviceInfo(device);
+                    await loadAssignmentInfo(device.id);
+                } else {
+                    showError('Device not found. Please check the asset tag.');
+                }
+            } catch (error) {
+                showError('Error connecting to server');
+            }
+            
+            hideLoading();
+        }
+        
+        async function loadAssignmentInfo(deviceId) {
+            try {
+                const response = await fetch(`/api/public/device/${deviceId}/current-assignment`);
+                if (response.ok) {
+                    const assignment = await response.json();
+                    const assignmentDiv = document.getElementById('assignmentInfo');
+                    if (assignment && assignment.actualReturnDate === null) {
+                        assignmentDiv.innerHTML = `
+                            <strong class="text-blue-600">Currently Assigned</strong><br>
+                            To: ${assignment.employeeName || 'Employee'}<br>
+                            Since: ${new Date(assignment.assignedDate).toLocaleDateString()}<br>
+                            Expected Return: ${assignment.expectedReturnDate || 'Not specified'}
+                        `;
+                    } else {
+                        assignmentDiv.innerHTML = '<span class="text-green-600">Available in inventory</span>';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load assignment:', error);
+            }
+        }
+        
+        function showDeviceInfo(device) {
+            const infoDiv = document.getElementById('deviceInfo');
+            document.getElementById('deviceAssetTag').textContent = device.assetTag;
+            document.getElementById('deviceSerial').textContent = device.serialNumber;
+            document.getElementById('deviceType').textContent = device.deviceType;
+            document.getElementById('deviceBrandModel').textContent = `${device.brand || ''} ${device.model || ''}`.trim() || '-';
+            
+            const statusSpan = document.getElementById('deviceStatus');
+            const status = device.currentStatus;
+            statusSpan.textContent = status;
+            if (status === 'AVAILABLE') {
+                statusSpan.className = 'px-2 py-1 text-xs rounded-full bg-green-100 text-green-800';
+            } else if (status === 'ASSIGNED') {
+                statusSpan.className = 'px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800';
+            } else {
+                statusSpan.className = 'px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800';
+            }
+            
+            const health = device.healthScore || 0;
+            document.getElementById('healthScore').textContent = health + '%';
+            const healthBar = document.getElementById('healthBar');
+            healthBar.style.width = health + '%';
+            if (health >= 70) healthBar.className = 'rounded-full h-2 bg-green-500';
+            else if (health >= 40) healthBar.className = 'rounded-full h-2 bg-yellow-500';
+            else healthBar.className = 'rounded-full h-2 bg-red-500';
+            
+            document.getElementById('deviceSpecs').textContent = device.specifications || 'No specifications provided';
+            
+            infoDiv.classList.remove('hidden');
+            document.getElementById('errorMsg').classList.add('hidden');
+        }
+        
+        async function startMobileScanner() {
+            try {
+                scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                const video = document.getElementById('scannerVideo');
+                video.srcObject = scannerStream;
+                video.classList.remove('hidden');
+                await video.play();
+                scannerActive = true;
+                document.getElementById('scanStatus').classList.remove('hidden');
+                document.getElementById('scanStatus').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning... Position barcode in frame';
+                scanBarcode();
+            } catch (err) {
+                alert('Could not access camera. Please use manual entry.');
+            }
+        }
+        
+        async function scanBarcode() {
+            if (!scannerActive) return;
+            
+            const video = document.getElementById('scannerVideo');
+            const canvas = document.getElementById('scannerCanvas');
+            
+            if (video.readyState !== 4) {
+                setTimeout(scanBarcode, 500);
+                return;
+            }
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+            const formData = new FormData();
+            formData.append('image', blob, 'scan.jpg');
+            
+            try {
+                const response = await fetch('/api/barcode/scan', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.found && result.device) {
+                        document.getElementById('scanStatus').innerHTML = '<i class="fas fa-check-circle text-green-500"></i> Found! Loading...';
+                        showDeviceInfo(result.device);
+                        await loadAssignmentInfo(result.device.id);
+                        stopScanner();
+                    }
+                }
+            } catch (error) {
+                console.error('Scan error:', error);
+            }
+            
+            if (scannerActive) {
+                setTimeout(scanBarcode, 1000);
+            }
+        }
+        
+        function stopScanner() {
+            scannerActive = false;
+            if (scannerStream) {
+                scannerStream.getTracks().forEach(track => track.stop());
+                scannerStream = null;
+            }
+            const video = document.getElementById('scannerVideo');
+            video.classList.add('hidden');
+            document.getElementById('scanStatus').classList.add('hidden');
+        }
+        
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('deviceInfo').classList.add('hidden');
+            document.getElementById('errorMsg').classList.add('hidden');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+        
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMsg').classList.remove('hidden');
+            document.getElementById('deviceInfo').classList.add('hidden');
+        }
+        
+        // Enter key support
+        document.getElementById('assetTag').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') trackDevice();
+        });
+    </script>
+</body>
+</html>

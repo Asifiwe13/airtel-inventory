@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Device Assignment Confirmation</title>
+</head>
+<body style="font-family: Arial, sans-serif;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #dc2626; padding: 20px; text-align: center; color: white;">
+            <h2>Airtel Inventory System</h2>
+        </div>
+        <div style="padding: 20px; border: 1px solid #e5e7eb;">
+            <h3>Device Assignment Confirmation</h3>
+            <p>Dear <span th:text="${employee.name}">Employee</span>,</p>
+            <p>The following device has been assigned to you:</p>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 8px; background: #f3f4f6;"><strong>Asset Tag:</strong></td>
+                    <td style="padding: 8px;" th:text="${device.assetTag}"></td></tr>
+                <tr><td style="padding: 8px; background: #f3f4f6;"><strong>Type:</strong></td>
+                    <td style="padding: 8px;" th:text="${device.deviceType}"></td></tr>
+                <tr><td style="padding: 8px; background: #f3f4f6;"><strong>Brand/Model:</strong></td>
+                    <td style="padding: 8px;" th:text="${device.brand} + ' ' + ${device.model}"></td></tr>
+                <tr><td style="padding: 8px; background: #f3f4f6;"><strong>Assigned Date:</strong></td>
+                    <td style="padding: 8px;" th:text="${#temporals.format(assignment.assignedDate, 'dd-MMM-yyyy')}"></td></tr>
+                <tr th:if="${assignment.expectedReturnDate}"><td style="padding: 8px; background: #f3f4f6;"><strong>Expected Return:</strong></td>
+                    <td style="padding: 8px;" th:text="${assignment.expectedReturnDate}"></td></tr>
+            </table>
+            <p style="margin-top: 20px;">Please take care of this device and return it in good condition.</p>
+            <hr style="margin: 20px 0;">
+            <p style="color: #6b7280; font-size: 12px;">This is an automated message from Airtel Inventory System.</p>
+        </div>
+    </div>
+</body>
+</html>

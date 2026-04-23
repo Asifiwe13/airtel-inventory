@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: head"></head>
+<body>
+<div th:replace="layout :: body">
+    <div th:fragment="content">
+        <h1 class="text-2xl font-bold mb-6"><i class="fas fa-chart-bar text-red-600 mr-2"></i>Reports & Analytics</h1>
+        
+        <!-- Export Buttons -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <button onclick="exportReport('devices', 'excel')" 
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg transition flex items-center justify-center">
+                <i class="fas fa-file-excel mr-2 text-xl"></i>
+                <span>Devices to Excel</span>
+            </button>
+            <button onclick="exportReport('devices', 'pdf')" 
+                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg transition flex items-center justify-center">
+                <i class="fas fa-file-pdf mr-2 text-xl"></i>
+                <span>Devices to PDF</span>
+            </button>
+            <button onclick="exportReport('assignments', 'excel')" 
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg transition flex items-center justify-center">
+                <i class="fas fa-file-excel mr-2 text-xl"></i>
+                <span>Assignments to Excel</span>
+            </button>
+            <button onclick="exportReport('assignments', 'pdf')" 
+                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg transition flex items-center justify-center">
+                <i class="fas fa-file-pdf mr-2 text-xl"></i>
+                <span>Assignments to PDF</span>
+            </button>
+        </div>
+        
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Total Devices</p>
+                        <p class="text-2xl font-bold" id="totalDevices">-</p>
+                    </div>
+                    <i class="fas fa-laptop text-blue-400 text-3xl"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Total Employees</p>
+                        <p class="text-2xl font-bold" id="totalEmployees">-</p>
+                    </div>
+                    <i class="fas fa-users text-green-400 text-3xl"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Active Assignments</p>
+                        <p class="text-2xl font-bold" id="activeAssignments">-</p>
+                    </div>
+                    <i class="fas fa-exchange-alt text-yellow-400 text-3xl"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Avg Health Score</p>
+                        <p class="text-2xl font-bold" id="avgHealth">-</p>
+                    </div>
+                    <i class="fas fa-heartbeat text-red-400 text-3xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Report Sections -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Device Type Distribution</h3>
+                <div id="deviceTypeReport" class="space-y-2">
+                    <p class="text-gray-500">Loading...</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Status Distribution</h3>
+                <div id="statusReport" class="space-y-2">
+                    <p class="text-gray-500">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Load summary data on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadSummary();
+        loadDeviceTypeReport();
+        loadStatusReport();
+    });
+    
+    async function loadSummary() {
+        const response = await fetch('/api/reports/summary');
+        const data = await response.json();
+        
+        document.getElementById('totalDevices').textContent = data.totalDevices || 0;
+        document.getElementById('totalEmployees').textContent = data.totalEmployees || 0;
+        document.getElementById('activeAssignments').textContent = data.activeAssignments || 0;
+        document.getElementById('avgHealth').textContent = (data.averageHealthScore || 0).toFixed(1) + '%';
+    }
+    
+    async function loadDeviceTypeReport() {
+        const response = await fetch('/api/reports/by-device-type');
+        const data = await response.json();
+        const container = document.getElementById('deviceTypeReport');
+        
+        if (data.data && Object.keys(data.data).length > 0) {
+            container.innerHTML = '';
+            for (const [type, count] of Object.entries(data.data)) {
+                container.innerHTML += `
+                    <div class="flex justify-between items-center p-2 border-b">
+                        <span class="font-medium">${type}</span>
+                        <span class="px-3 py-1 bg-blue-100 rounded-full text-blue-800">${count} devices</span>
+                    </div>
+                `;
+            }
+        } else {
+            container.innerHTML = '<p class="text-gray-500">No data available</p>';
+        }
+    }
+    
+    async function loadStatusReport() {
+        const response = await fetch('/api/reports/by-status');
+        const data = await response.json();
+        const container = document.getElementById('statusReport');
+        
+        container.innerHTML = `
+            <div class="flex justify-between items-center p-2 border-b">
+                <span class="font-medium">Available</span>
+                <span class="px-3 py-1 bg-green-100 rounded-full text-green-800">${data.AVAILABLE || 0} devices</span>
+            </div>
+            <div class="flex justify-between items-center p-2 border-b">
+                <span class="font-medium">Assigned</span>
+                <span class="px-3 py-1 bg-blue-100 rounded-full text-blue-800">${data.ASSIGNED || 0} devices</span>
+            </div>
+            <div class="flex justify-between items-center p-2 border-b">
+                <span class="font-medium">Under Repair</span>
+                <span class="px-3 py-1 bg-yellow-100 rounded-full text-yellow-800">${data.UNDER_REPAIR || 0} devices</span>
+            </div>
+        `;
+    }
+    
+    function exportReport(type, format) {
+        let url = `/api/reports/export/${type}`;
+        if (format === 'pdf') {
+            url += '/pdf';
+        }
+        window.location.href = url;
+    }
+</script>
+</body>
+</html>

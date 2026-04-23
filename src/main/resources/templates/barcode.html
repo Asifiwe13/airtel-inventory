@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Barcode Generator</title>
+    <style>
+        body { font-family: Arial; padding: 20px; text-align: center; }
+        .barcode { padding: 20px; margin: 20px auto; background: white; display: inline-block; }
+        input { padding: 10px; width: 300px; margin: 10px; }
+        button { padding: 10px 20px; background: #dc2626; color: white; border: none; cursor: pointer; }
+        img { border: 1px solid #ccc; padding: 10px; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+    <h1>Test Barcode Generator</h1>
+    <p>Enter an existing device asset tag from your database:</p>
+    <input type="text" id="barcodeValue" value="AST-LAP-001" placeholder="Asset Tag">
+    <br>
+    <button onclick="generateBarcode()">Generate Barcode</button>
+    <br><br>
+    <div class="barcode">
+        <svg id="barcode"></svg>
+    </div>
+    <p>Right-click the barcode → Save image as → Upload to scanner</p>
+
+    <script>
+        function generateBarcode() {
+            const value = document.getElementById('barcodeValue').value;
+            JsBarcode("#barcode", value, {
+                format: "CODE128",
+                lineColor: "#000",
+                width: 2,
+                height: 100,
+                displayValue: true,
+                fontSize: 16,
+                margin: 10
+            });
+        }
+        generateBarcode();
+    </script>
+</body>
+</html>

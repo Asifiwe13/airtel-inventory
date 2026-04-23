@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: airtel-inventory
+    runtime: image
+    repo: https://github.com/YOUR_USERNAME/YOUR_REPO_NAME
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: JDBC_DATABASE_URL
+        fromDatabase:
+          name: airtel-db
+          property: connectionString
+      - key: JDBC_DATABASE_USERNAME
+        fromDatabase:
+          name: airtel-db
+          property: user
+      - key: JDBC_DATABASE_PASSWORD
+        fromDatabase:
+          name: airtel-db
+          property: password
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+
+databases:
+  - name: airtel-db
+    databaseName: airtel_inventory
+    user: airtel_user
+    plan: free

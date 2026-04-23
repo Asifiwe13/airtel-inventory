@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} ?: 'Airtel Inventory System'">Airtel Inventory</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        
+        /* Dark mode custom styles */
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --border-color: #2d3748;
+            --card-bg: #0f3460;
+            --sidebar-bg: #0f3460;
+            --hover-bg: #1a1a2e;
+        }
+        
+        [data-theme="light"] {
+            --bg-primary: #f9fafb;
+            --bg-secondary: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --card-bg: #ffffff;
+            --sidebar-bg: #ffffff;
+            --hover-bg: #f3f4f6;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .bg-white, .bg-gray-50, .bg-gray-100 {
+            background-color: var(--card-bg) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        .sidebar-item, .nav-link, .tab-btn {
+            color: var(--text-primary) !important;
+        }
+        
+        .sidebar-item:hover, .nav-link:hover {
+            background-color: var(--hover-bg) !important;
+        }
+        
+        .border, .border-gray-200, .border-gray-300 {
+            border-color: var(--border-color) !important;
+        }
+        
+        .text-gray-500, .text-gray-600, .text-gray-700 {
+            color: var(--text-secondary) !important;
+        }
+        
+        .shadow-md, .shadow-lg, .shadow-xl {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .dark-transition {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<!-- Top Navbar -->
+<nav class="bg-white shadow-md fixed w-full top-0 z-50 border-b dark-transition">
+    <div class="px-6 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <i class="fas fa-server text-red-600 text-2xl"></i>
+            <span class="font-bold text-xl">Airtel<span class="text-red-600">Inventory</span></span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <!-- Dark Mode Toggle Button -->
+            <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 transition dark-transition">
+                <i id="darkModeIcon" class="fas fa-moon text-gray-600 text-xl"></i>
+            </button>
+            <span class="text-sm text-gray-600"><i class="fas fa-user mr-1"></i> Admin</span>
+            <a href="/logout" class="text-red-600 hover:text-red-700"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </div>
+</nav>
+
+<!-- Sidebar + Content -->
+<div class="flex pt-16">
+    <!-- Sidebar -->
+    <div class="w-64 bg-white shadow-md h-screen fixed overflow-y-auto dark-transition">
+        <div class="p-4 space-y-1">
+            <a href="/dashboard" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                <i class="fas fa-tachometer-alt w-5"></i><span>Dashboard</span>
+            </a>
+            <a href="/devices" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                <i class="fas fa-laptop w-5"></i><span>All Devices</span>
+            </a>
+            <a href="/devices/register" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                <i class="fas fa-plus-circle w-5"></i><span>Register Device</span>
+            </a>
+            <a href="/employees" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                <i class="fas fa-users w-5"></i><span>All Employees</span>
+            </a>
+            <a href="/employees/register" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                <i class="fas fa-user-plus w-5"></i><span>Add Employee</span>
+            </a>
+            <a href="/assignments" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                <i class="fas fa-exchange-alt w-5"></i><span>Assignments</span>
+            </a>
+            <a href="/reports" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                <i class="fas fa-chart-bar w-5"></i><span>Reports</span>
+            </a>
+            <a href="/scanner" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                <i class="fas fa-qrcode w-5"></i><span>Barcode Scanner</span>
+            </a>
+            <!-- ✅ Track Device Link - NOW INSIDE THE SIDEBAR -->
+            <a href="/track" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+                <i class="fas fa-search-location w-5"></i><span>Track Device</span>
+            </a>
+            
+            <a href="/ai-test" class="sidebar-item flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-700">
+    <i class="fas fa-microchip w-5"></i><span>AI Test Lab</span>
+</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ml-64 flex-1 p-6">
+        <div th:replace="${content} :: content"></div>
+    </div>
+</div>
+
+<script>
+    // Dark Mode Toggle Function
+    function toggleDarkMode() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        // Update icon
+        const icon = document.getElementById('darkModeIcon');
+        if (newTheme === 'dark') {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    }
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Set correct icon
+    const icon = document.getElementById('darkModeIcon');
+    if (savedTheme === 'dark') {
+        icon.classList.remove('fa-moon');
+        icon.classList.add('fa-sun');
+    }
+</script>
+
+<!-- WebSocket and Barcode Scripts will be added to individual pages -->
+</body>
+</html>

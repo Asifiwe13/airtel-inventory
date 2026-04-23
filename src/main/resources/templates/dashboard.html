@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: head"></head>
+<body>
+<div th:replace="layout :: body">
+    <div th:fragment="content">
+        <!-- Welcome Banner -->
+        <div class="bg-gradient-to-r from-red-600 to-red-700 rounded-xl p-6 mb-6 text-white">
+            <h1 class="text-2xl font-bold">Welcome to Airtel Inventory! 👋</h1>
+            <p class="text-red-100 mt-1">Track and manage all your end-user equipment</p>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-500 text-sm">Total Devices</p>
+                        <p class="text-3xl font-bold" th:text="${stats.totalDevices}">0</p>
+                    </div>
+                    <i class="fas fa-server text-blue-500 text-3xl"></i>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-500 text-sm">Assigned</p>
+                        <p class="text-3xl font-bold" th:text="${stats.assignedDevices}">0</p>
+                    </div>
+                    <i class="fas fa-check-circle text-green-500 text-3xl"></i>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-500 text-sm">Available</p>
+                        <p class="text-3xl font-bold" th:text="${stats.availableDevices}">0</p>
+                    </div>
+                    <i class="fas fa-box text-yellow-500 text-3xl"></i>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-500 text-sm">Avg Health</p>
+                        <p class="text-3xl font-bold" th:text="${stats.averageHealthScore != null ? stats.averageHealthScore.intValue() : 0}">0</p>
+                    </div>
+                    <i class="fas fa-heartbeat text-purple-500 text-3xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alerts -->
+        <div th:if="${!highRiskDevices.isEmpty()}" class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 mb-6">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-red-500 text-xl mr-3"></i>
+                <div>
+                    <h3 class="text-red-800 font-semibold">Critical Alerts</h3>
+                    <p th:each="device : ${highRiskDevices}" class="text-red-600 text-sm">
+                        • <span th:text="${device.assetTag}"></span> - Health: <span th:text="${device.healthScore}"></span>%
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Devices -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b">
+                <h2 class="text-lg font-semibold"><i class="fas fa-history text-red-600 mr-2"></i>Recent Devices</h2>
+            </div>
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs">Asset Tag</th>
+                        <th class="px-6 py-3 text-left text-xs">Type</th>
+                        <th class="px-6 py-3 text-left text-xs">Status</th>
+                        <th class="px-6 py-3 text-left text-xs">Health</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="device : ${recentDevices}" class="border-t hover:bg-gray-50">
+                        <td class="px-6 py-3 text-sm" th:text="${device.assetTag}">-</td>
+                        <td class="px-6 py-3 text-sm" th:text="${device.deviceType}">-</td>
+                        <td class="px-6 py-3">
+                            <span th:if="${device.currentStatus == 'AVAILABLE'}" class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Available</span>
+                            <span th:if="${device.currentStatus == 'ASSIGNED'}" class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Assigned</span>
+                            <span th:if="${device.currentStatus == 'UNDER_REPAIR'}" class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">Under Repair</span>
+                        </td>
+                        <td class="px-6 py-3">
+                            <div class="flex items-center">
+                                <div class="w-16 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-500 rounded-full h-2" th:style="'width:' + ${device.healthScore} + '%'"></div>
+                                </div>
+                                <span class="ml-2 text-xs" th:text="${device.healthScore} + '%'"></span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+    <!-- Device Distribution Chart -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold mb-4">Device Distribution by Type</h3>
+        <canvas id="deviceTypeChart" height="250"></canvas>
+    </div>
+    
+    <!-- Health Score Distribution -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold mb-4">Device Health Distribution</h3>
+        <canvas id="healthDistributionChart" height="250"></canvas>
+    </div>
+    
+    <!-- AI Insights Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+    <!-- AI Chatbot -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold mb-4">
+            <i class="fas fa-robot text-red-600 mr-2"></i>AI Assistant
+        </h3>
+        <div id="chatMessages" class="h-64 overflow-y-auto border rounded-lg p-3 mb-3 bg-gray-50">
+            <div class="text-gray-500 text-center">Ask me anything about the inventory!</div>
+        </div>
+        <div class="flex gap-2">
+            <input type="text" id="chatInput" placeholder="Ask a question..." 
+                   class="flex-1 px-3 py-2 border rounded-lg">
+            <button onclick="sendChat()" class="bg-red-600 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Predictive Maintenance -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold mb-4">
+            <i class="fas fa-chart-line text-red-600 mr-2"></i>AI Predictions
+        </h3>
+        <div id="aiPredictions" class="space-y-2">
+            <p class="text-gray-500">Loading predictions...</p>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+    // Load chart data from API
+    async function loadCharts() {
+        const response = await fetch('/api/devices');
+        const devices = await response.json();
+        
+        // Device type distribution
+        const typeCount = {};
+        devices.forEach(d => typeCount[d.deviceType] = (typeCount[d.deviceType] || 0) + 1);
+        
+        new Chart(document.getElementById('deviceTypeChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(typeCount),
+                datasets: [{
+                    data: Object.values(typeCount),
+                    backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6']
+                }]
+            }
+        });
+        
+        // Health distribution
+        const healthRanges = { 'Excellent (80-100)': 0, 'Good (60-79)': 0, 'Fair (40-59)': 0, 'Poor (0-39)': 0 };
+        devices.forEach(d => {
+            if (d.healthScore >= 80) healthRanges['Excellent (80-100)']++;
+            else if (d.healthScore >= 60) healthRanges['Good (60-79)']++;
+            else if (d.healthScore >= 40) healthRanges['Fair (40-59)']++;
+            else healthRanges['Poor (0-39)']++;
+        });
+        
+        new Chart(document.getElementById('healthDistributionChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(healthRanges),
+                datasets: [{
+                    label: 'Number of Devices',
+                    data: Object.values(healthRanges),
+                    backgroundColor: '#ef4444'
+                }]
+            }
+        });
+    }
+    
+    loadCharts();
+    
+    
+	    async function sendChat() {
+	    const input = document.getElementById('chatInput');
+	    const message = input.value.trim();
+	    if (!message) return;
+	    
+	    const messagesDiv = document.getElementById('chatMessages');
+	    messagesDiv.innerHTML += `<div class="text-right mb-2"><span class="inline-block bg-blue-100 rounded-lg px-3 py-1">${message}</span></div>`;
+	    input.value = '';
+	    
+	    const response = await fetch('/api/ai/chat', {
+	        method: 'POST',
+	        headers: { 'Content-Type': 'application/json' },
+	        body: JSON.stringify({ message: message })
+	    });
+	    const data = await response.json();
+	    messagesDiv.innerHTML += `<div class="text-left mb-2"><span class="inline-block bg-gray-200 rounded-lg px-3 py-1">🤖 ${data.response}</span></div>`;
+	    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+	}
+	
+	// Load AI Predictions
+	async function loadAIPredictions() {
+	    const response = await fetch('/api/ai/high-risk');
+	    const devices = await response.json();
+	    const container = document.getElementById('aiPredictions');
+	    
+	    if (devices.length === 0) {
+	        container.innerHTML = '<p class="text-green-600">✅ No high-risk devices detected</p>';
+	        return;
+	    }
+	    
+	    container.innerHTML = devices.map(d => `
+	        <div class="p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
+	            <div class="flex justify-between">
+	                <span class="font-semibold">${d.assetTag}</span>
+	                <span class="text-red-600 font-bold">${d.failureProbability}% risk</span>
+	            </div>
+	            <p class="text-sm text-gray-600">${d.recommendedAction}</p>
+	        </div>
+	    `).join('');
+	}
+	
+	loadAIPredictions();
+</script>
+</body>
+</html>

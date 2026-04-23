@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: head"></head>
+<body>
+<div th:replace="layout :: body">
+    <div th:fragment="content">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-2xl font-bold mb-6">
+                <i class="fas fa-microchip text-red-600 mr-2"></i>AI Prediction Tester
+            </h1>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Test Form -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-sliders-h text-red-600 mr-2"></i>Adjust Device Parameters
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Device Name</label>
+                            <input type="text" id="deviceName" value="TEST-DEVICE-001" 
+                                   class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Age (months)</label>
+                            <input type="range" id="ageMonths" min="0" max="48" value="12" 
+                                   class="w-full">
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>0</span><span>12</span><span>24</span><span>36</span><span>48</span>
+                            </div>
+                            <p id="ageValue" class="text-sm font-semibold mt-1">12 months</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Issues Reported</label>
+                            <input type="range" id="issueCount" min="0" max="10" value="0" 
+                                   class="w-full">
+                            <p id="issueValue" class="text-sm font-semibold mt-1">0 issues</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Months Since Maintenance</label>
+                            <input type="range" id="maintenanceDelay" min="0" max="24" value="0" 
+                                   class="w-full">
+                            <p id="maintenanceValue" class="text-sm font-semibold mt-1">0 months</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Times Assigned</label>
+                            <input type="range" id="usageCount" min="0" max="20" value="0" 
+                                   class="w-full">
+                            <p id="usageValue" class="text-sm font-semibold mt-1">0 assignments</p>
+                        </div>
+                        
+                        <button onclick="testPrediction()" 
+                                class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition">
+                            <i class="fas fa-chart-line mr-2"></i>Calculate AI Prediction
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Results -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-brain text-red-600 mr-2"></i>AI Prediction Result
+                    </h2>
+                    
+                    <div id="resultContainer" class="text-center text-gray-500 py-8">
+                        <i class="fas fa-robot text-4xl mb-3"></i>
+                        <p>Adjust the parameters and click "Calculate"</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preset Scenarios -->
+            <div class="bg-white rounded-xl shadow-md p-6 mt-6">
+                <h2 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-chart-simple text-red-600 mr-2"></i>Test Scenarios
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="loadScenario('new')" 
+                            class="bg-green-100 hover:bg-green-200 text-green-800 p-3 rounded-lg transition">
+                        <i class="fas fa-seedling mr-2"></i>New Device<br>
+                        <span class="text-xs">Age: 0, Issues: 0</span>
+                    </button>
+                    <button onclick="loadScenario('medium')" 
+                            class="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 p-3 rounded-lg transition">
+                        <i class="fas fa-chart-line mr-2"></i>Medium Risk<br>
+                        <span class="text-xs">Age: 24, Issues: 3</span>
+                    </button>
+                    <button onclick="loadScenario('high')" 
+                            class="bg-red-100 hover:bg-red-200 text-red-800 p-3 rounded-lg transition">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>High Risk<br>
+                        <span class="text-xs">Age: 48, Issues: 8, No maintenance</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Explanation -->
+            <div class="bg-blue-50 rounded-xl p-6 mt-6 border-l-4 border-blue-500">
+                <h3 class="font-semibold text-blue-800 mb-2">
+                    <i class="fas fa-info-circle mr-2"></i>How AI Predictions Work
+                </h3>
+                <div class="text-sm text-blue-700 space-y-1">
+                    <p><strong>Formula:</strong> (Age × 30%) + (Issues × 35%) + (Maintenance × 20%) + (Usage × 15%)</p>
+                    <p><strong>0-30%:</strong> 🟢 LOW risk - Routine maintenance only</p>
+                    <p><strong>30-60%:</strong> 🟡 MEDIUM risk - Schedule preventive maintenance</p>
+                    <p><strong>60-100%:</strong> 🔴 HIGH risk - Immediate maintenance required</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update display values
+    document.getElementById('ageMonths').addEventListener('input', function() {
+        document.getElementById('ageValue').textContent = this.value + ' months';
+    });
+    document.getElementById('issueCount').addEventListener('input', function() {
+        document.getElementById('issueValue').textContent = this.value + ' issues';
+    });
+    document.getElementById('maintenanceDelay').addEventListener('input', function() {
+        let val = this.value;
+        document.getElementById('maintenanceValue').textContent = val + ' months' + (val == 0 ? ' (never maintained)' : '');
+    });
+    document.getElementById('usageCount').addEventListener('input', function() {
+        document.getElementById('usageValue').textContent = this.value + ' assignments';
+    });
+    
+    async function testPrediction() {
+        const data = {
+            assetTag: document.getElementById('deviceName').value,
+            ageMonths: parseInt(document.getElementById('ageMonths').value),
+            issueCount: parseInt(document.getElementById('issueCount').value),
+            maintenanceDelay: parseInt(document.getElementById('maintenanceDelay').value),
+            usageCount: parseInt(document.getElementById('usageCount').value)
+        };
+        
+        const response = await fetch('/api/ai/test-prediction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        const container = document.getElementById('resultContainer');
+        const riskColor = result.riskLevel === 'LOW' ? 'text-green-600' : (result.riskLevel === 'MEDIUM' ? 'text-yellow-600' : 'text-red-600');
+        const bgColor = result.riskLevel === 'LOW' ? 'bg-green-50 border-green-500' : (result.riskLevel === 'MEDIUM' ? 'bg-yellow-50 border-yellow-500' : 'bg-red-50 border-red-500');
+        
+        container.innerHTML = `
+            <div class="${bgColor} border-l-4 rounded-lg p-4">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-bold text-lg">${result.assetTag}</span>
+                    <span class="text-2xl font-bold ${riskColor}">${result.failureProbability}% risk</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+                    <div class="rounded-full h-3 ${result.riskLevel === 'LOW' ? 'bg-green-500' : (result.riskLevel === 'MEDIUM' ? 'bg-yellow-500' : 'bg-red-500')}" 
+                         style="width: ${result.failureProbability}%"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm mb-3">
+                    <div class="bg-white rounded p-2">
+                        <span class="text-gray-500">Age Factor:</span>
+                        <span class="font-semibold">${result.ageFactor}%</span>
+                    </div>
+                    <div class="bg-white rounded p-2">
+                        <span class="text-gray-500">Issue Factor:</span>
+                        <span class="font-semibold">${result.issueFactor}%</span>
+                    </div>
+                    <div class="bg-white rounded p-2">
+                        <span class="text-gray-500">Maintenance Factor:</span>
+                        <span class="font-semibold">${result.maintenanceFactor}%</span>
+                    </div>
+                    <div class="bg-white rounded p-2">
+                        <span class="text-gray-500">Usage Factor:</span>
+                        <span class="font-semibold">${result.usageFactor}%</span>
+                    </div>
+                </div>
+                <p class="text-sm font-medium">📋 ${result.recommendedAction}</p>
+            </div>
+        `;
+    }
+    
+    function loadScenario(type) {
+        if (type === 'new') {
+            document.getElementById('deviceName').value = 'NEW-DEVICE-001';
+            document.getElementById('ageMonths').value = 0;
+            document.getElementById('ageValue').textContent = '0 months';
+            document.getElementById('issueCount').value = 0;
+            document.getElementById('issueValue').textContent = '0 issues';
+            document.getElementById('maintenanceDelay').value = 0;
+            document.getElementById('maintenanceValue').textContent = '0 months (never maintained)';
+            document.getElementById('usageCount').value = 0;
+            document.getElementById('usageValue').textContent = '0 assignments';
+        } else if (type === 'medium') {
+            document.getElementById('deviceName').value = 'MEDIUM-RISK-001';
+            document.getElementById('ageMonths').value = 24;
+            document.getElementById('ageValue').textContent = '24 months';
+            document.getElementById('issueCount').value = 3;
+            document.getElementById('issueValue').textContent = '3 issues';
+            document.getElementById('maintenanceDelay').value = 6;
+            document.getElementById('maintenanceValue').textContent = '6 months';
+            document.getElementById('usageCount').value = 5;
+            document.getElementById('usageValue').textContent = '5 assignments';
+        } else if (type === 'high') {
+            document.getElementById('deviceName').value = 'HIGH-RISK-001';
+            document.getElementById('ageMonths').value = 48;
+            document.getElementById('ageValue').textContent = '48 months';
+            document.getElementById('issueCount').value = 8;
+            document.getElementById('issueValue').textContent = '8 issues';
+            document.getElementById('maintenanceDelay').value = 12;
+            document.getElementById('maintenanceValue').textContent = '12 months';
+            document.getElementById('usageCount').value = 15;
+            document.getElementById('usageValue').textContent = '15 assignments';
+        }
+        testPrediction();
+    }
+</script>
+</body>
+</html>

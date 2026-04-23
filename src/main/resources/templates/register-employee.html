@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: head"></head>
+<body>
+<div th:replace="layout :: body">
+    <div th:fragment="content">
+        <div class="max-w-2xl mx-auto">
+            <h1 class="text-2xl font-bold mb-2"><i class="fas fa-user-plus text-red-600 mr-2"></i>Add Employee</h1>
+            <p class="text-gray-500 text-sm mb-6">Register new employee in the system</p>
+            
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <form id="employeeForm">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Employee ID *</label>
+                            <input type="text" id="id" required class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Full Name *</label>
+                            <input type="text" id="name" required class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Department</label>
+                            <input type="text" id="department" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Designation</label>
+                            <input type="text" id="designation" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Email</label>
+                            <input type="email" id="email" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Phone</label>
+                            <input type="text" id="phone" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                        <a href="/employees" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</a>
+                        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Save Employee</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('employeeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            id: document.getElementById('id').value,
+            name: document.getElementById('name').value,
+            department: document.getElementById('department').value,
+            designation: document.getElementById('designation').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value
+        };
+        
+        const response = await fetch('/api/employees', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        if(response.ok) {
+            window.location.href = '/employees';
+        } else {
+            alert('Error adding employee');
+        }
+    });
+</script>
+</body>
+</html>
