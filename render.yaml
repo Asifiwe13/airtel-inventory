@@ -1,7 +1,7 @@
 services:
   - type: web
     name: airtel-inventory
-    runtime: image
+    runtime: docker
     repo: https://github.com/Asifiwe13/airtel-inventory
     plan: free
     dockerfilePath: ./Dockerfile
