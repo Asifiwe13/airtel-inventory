@@ -1,8 +1,8 @@
 services:
   - type: web
     name: airtel-inventory
-    runtime: image
-    repo: https://github.com/YOUR_USERNAME/YOUR_REPO_NAME
+    runtime: docker
+    repo: https://github.com/Asifiwe13/airtel-inventory
     plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -29,5 +29,3 @@ databases:
     databaseName: airtel_inventory
     user: airtel_user
     plan: free
-    # Remove postgresMajorVersion - it's not needed
-    # PostgreSQL 15 is default
