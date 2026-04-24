@@ -9,10 +9,6 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: render
-      - key: JDBC_DATABASE_URL
-        fromDatabase:
-          name: airtel-db
-          property: connectionString
       - key: JDBC_DATABASE_USERNAME
         fromDatabase:
           name: airtel-db
